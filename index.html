@@ -147,6 +147,7 @@ products.forEach(p => {
 
 let id = "";
 let currentFile = "";
+let token = "";
 
 async function buy(file){
   currentFile = file;
@@ -165,6 +166,7 @@ async function buy(file){
   const data = await res.json();
 
   id = data.id;
+    token = data.token;
   document.getElementById("qr").src = data.qr;
 
   check();
@@ -179,7 +181,7 @@ function check(){
       clearInterval(i);
       document.getElementById("status").innerText = "จ่ายแล้ว ✅";
 
-      window.location.href = "/download/" + id;
+      window.location.href = "/download/" + id + "/" + token;
     }
   },3000);
 }

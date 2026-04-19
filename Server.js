@@ -1,5 +1,6 @@
 const express = require('express');
 const cors = require('cors');
+const path = require('path');
 
 const omise = require('omise')({
   publicKey: 'pkey_test_67amk7ovg402vun4xie',
@@ -13,9 +14,27 @@ app.use(express.static(__dirname));
 
 let paid = {};
 
+// 🔥 whitelist สินค้า (กันยิงมั่ว)
+const products = {
+  "money.pdf": "money.pdf",
+  "herb.pdf": "herb.pdf",
+  "online.pdf": "online.pdf"
+};
+
+// 🔥 สร้าง token กันเดา link
+function generateToken() {
+  return Math.random().toString(36).substring(2) + Date.now();
+}
+
+// ================= CREATE =================
 app.post('/create', async (req, res) => {
   try {
-    const { file } = req.body; // 🔥 เพิ่มตรงนี้
+    const { file } = req.body;
+
+    // ❗ กันยิงมั่ว
+    if (!products[file]) {
+      return res.status(400).send("สินค้าไม่ถูกต้อง");
+    }
 
     const charge = await omise.charges.create({
       amount: 2000,
@@ -23,36 +42,43 @@ app.post('/create', async (req, res) => {
       source: { type: 'promptpay' }
     });
 
+    const token = generateToken();
+
     paid[charge.id] = {
       status: false,
       time: Date.now(),
-      file: file // 🔥 เพิ่มตรงนี้
+      file: file,
+      token: token // 🔥 เก็บ token
     };
 
     res.json({
       id: charge.id,
-      qr: charge.source.scannable_code.image.download_uri
+      qr: charge.source.scannable_code.image.download_uri,
+      token: token // 🔥 ส่ง token กลับไป
     });
 
   } catch (err) {
-    console.log("ERROR:", err); // 👈 สำคัญมาก
+    console.log("ERROR:", err);
     res.status(500).send("error");
   }
 });
+
+// ================= WEBHOOK =================
 app.post('/webhook', (req, res) => {
   const event = req.body;
 
   if (event.key === 'charge.complete') {
     if (event.data.status === 'successful') {
       if (paid[event.data.id]) {
-  paid[event.data.id].status = true;
-}
+        paid[event.data.id].status = true;
+      }
     }
   }
 
   res.sendStatus(200);
 });
 
+// ================= CHECK =================
 app.get('/check/:id', (req, res) => {
   const data = paid[req.params.id];
 
@@ -60,13 +86,14 @@ app.get('/check/:id', (req, res) => {
     return res.json({ paid: false });
   }
 
-  const expired = (Date.now() - data.time) > 600000; // 10 นาที
+  const expired = (Date.now() - data.time) > 600000;
 
   res.json({
     paid: data.status && !expired
   });
 });
 
+// ================= TEST =================
 app.get('/testpay/:id', (req, res) => {
   if (paid[req.params.id]) {
     paid[req.params.id].status = true;
@@ -76,33 +103,29 @@ app.get('/testpay/:id', (req, res) => {
   }
 });
 
-const path = require('path');
-
-app.get('/download/:id', (req, res) => {
+// ================= DOWNLOAD =================
+app.get('/download/:id/:token', (req, res) => {
   const data = paid[req.params.id];
 
   if (!data) return res.send("ไม่มีข้อมูล");
 
   const expired = (Date.now() - data.time) > 600000;
 
-  if (data.status && !expired) {
-
-     delete paid[req.params.id];
+  // 🔥 เช็ค token + สถานะ + เวลา
+  if (
+    data.status &&
+    !expired &&
+    req.params.token === data.token
+  ) {
 
     const filePath = path.join(__dirname, data.file);
 
-    console.log("กำลังส่งไฟล์:", filePath);
-    console.log("โหลดไฟล์แล้ว!");
+    delete paid[req.params.id]; // โหลดได้ครั้งเดียว
 
-    res.download(filePath, (err) => {
-      if (err) {
-        console.log("โหลดไม่ได้:", err);
-        res.send("โหลดไฟล์ไม่สำเร็จ");
-      }
-    });
+    res.download(filePath);
 
   } else {
-    res.send("หมดเวลา หรือยังไม่จ่าย");
+    res.send("หมดเวลา / token ไม่ถูกต้อง / ยังไม่จ่าย");
   }
 });
 
