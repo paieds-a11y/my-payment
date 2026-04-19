@@ -43,9 +43,9 @@ app.post('/create', async (req, res) => {
     });
 
   } catch (err) {
-    console.log(err);
-    res.status(500).send("error");
-  }
+  console.log("ERROR:", err);
+  res.status(500).json({ error: err.message });
+}
 });
 
 // ✅ CHECK
