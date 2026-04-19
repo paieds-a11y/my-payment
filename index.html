@@ -2,36 +2,63 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>ร้านสูตรลับ 20 บาท</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🔥 สูตรลับทำเงิน</title>
 
 <style>
 body {
+  margin: 0;
   font-family: sans-serif;
   background: #f5f5f5;
 }
 
-h2 {
+/* HERO */
+.hero {
+  background: linear-gradient(135deg, black, #333);
+  color: white;
+  padding: 25px;
   text-align: center;
 }
 
+.hero h1 {
+  font-size: 26px;
+  margin: 0;
+}
+
+.hero p {
+  margin: 10px 0;
+}
+
+.timer {
+  background: red;
+  padding: 5px 10px;
+  display: inline-block;
+  border-radius: 5px;
+  margin-top: 10px;
+}
+
+/* GRID */
 #shop {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-  gap: 15px;
-  padding: 20px;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 12px;
+  padding: 12px;
 }
 
 .card {
   background: white;
-  padding: 10px;
   border-radius: 10px;
-  text-align: center;
-  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+  overflow: hidden;
+  box-shadow: 0 3px 6px rgba(0,0,0,0.1);
 }
 
 .card img {
   width: 100%;
-  border-radius: 8px;
+}
+
+.card-content {
+  padding: 10px;
+  text-align: center;
 }
 
 .price {
@@ -41,162 +68,144 @@ h2 {
 
 button {
   margin-top: 5px;
-  padding: 8px;
+  padding: 10px;
   width: 100%;
   border: none;
   background: black;
   color: white;
   border-radius: 5px;
-  cursor: pointer;
+  font-size: 14px;
 }
 
-/* 🔥 popup พื้นหลัง */
+/* REVIEW */
+.review {
+  background: white;
+  margin: 10px;
+  padding: 10px;
+  border-radius: 10px;
+}
+
+/* POPUP */
 #popup {
   position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
+  top:0;left:0;
+  width:100%;height:100%;
+  display:none;
   background: rgba(0,0,0,0.6);
-  display: none;
+  justify-content:center;
+  align-items:center;
 }
 
-/* 🔥 กล่อง QR */
 #popupBox {
-  background: white;
-  padding: 20px;
-  border-radius: 10px;
-  width: 300px;
-  margin: 100px auto;
-  text-align: center;
-}
-.title {
-  text-align: center;
-  font-size: 36px;
-  font-weight: bold;
-  margin-top: 20px;
-}
-
-.subtitle {
-  text-align: center;
-  font-size: 16px;
-  color: #555;
+  background:white;
+  padding:20px;
+  border-radius:10px;
+  text-align:center;
 }
 </style>
-
 </head>
 
 <body>
 
-<h2 class="title">🔥 สูตรลับทำเงิน 🔥</h2>
-
-<p class="subtitle">
-  💰 ทุกไฟล์ 20 บาท <br>
-  📥 จ่ายแล้วโหลดทันที
-</p>
+<div class="hero">
+  <h1>🔥 สูตรลับทำเงิน</h1>
+  <p>คนธรรมดาเริ่มจาก 0 → มีรายได้ทุกวัน</p>
+  <div class="timer">⏳ โปรเหลือเวลา: <span id="time">10:00</span></div>
+</div>
 
 <div id="shop"></div>
 
-<!-- 🔥 popup -->
+<div class="review">⭐ “ซื้อแล้วเอาไปทำตาม ได้เงินจริง” - เอก</div>
+<div class="review">⭐ “20 บาท คุ้มมาก” - นัท</div>
+<div class="review">⭐ “โหลดแล้วเริ่มทำได้เลย” - บอล</div>
+
 <div id="popup" onclick="closePopup(event)">
   <div id="popupBox" onclick="event.stopPropagation()">
-
     <button onclick="hidePopup()">❌</button>
-
-    <h3>สแกนเพื่อปลดล็อก</h3>
-    <img id="qr" width="200"><br><br>
+    <h3>📲 สแกนจ่าย</h3>
+    <img id="qr" width="200"><br>
     <p id="status">รอชำระเงิน...</p>
-
   </div>
 </div>
 
 <script>
 const products = [
-  {
-    name: "สูตรชาเย็น",
-    file: "money.pdf",
-    img: "ชาเย็น.jpg"
-  },
-  {
-    name: "สูตรชานมไข่มุก",
-    file: "ชานมไข่มุก.pdf",
-    img: "ชานมไข่มุก.jpg"
-  },
-  {
-    name: "สูตรสตอเค็ก",
-    file: "สตอเค็ก.pdf",
-    img: "สตอเค็ก.jpg"
-  }
+  {name:"สูตรลับทำเงิน", file:"money.pdf", img:"https://picsum.photos/200?1"},
+  {name:"สูตรสมุนไพรชาย", file:"herb.pdf", img:"https://picsum.photos/200?2"},
+  {name:"สูตรออนไลน์", file:"online.pdf", img:"https://picsum.photos/200?3"}
 ];
+
 const shop = document.getElementById("shop");
 
-products.forEach(p => {
-  const div = document.createElement("div");
-  div.className = "card";
+products.forEach(p=>{
+  const div=document.createElement("div");
+  div.className="card";
 
-  div.innerHTML = `
+  div.innerHTML=`
     <img src="${p.img}">
-    <h4>${p.name}</h4>
-    <p style="color:orange;">⭐ 4.8 (120 รีวิว)</p>
-    <p class="price">฿20</p>
-    <button onclick="buy('${p.file}')">ซื้อ</button>
+    <div class="card-content">
+      <h4>${p.name}</h4>
+      <div class="price">฿20</div>
+      <button onclick="buy('${p.file}')">ซื้อทันที</button>
+    </div>
   `;
-
   shop.appendChild(div);
 });
 
-let id = "";
-let currentFile = "";
-let token = "";
+let id="", token="";
 
 async function buy(file){
-  currentFile = file;
+  document.getElementById("popup").style.display="flex";
 
-  document.getElementById("popup").style.display = "block";
-  document.getElementById("status").innerText = "รอชำระเงิน...";
-
-  const res = await fetch("/create", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json"
-    },
-    body: JSON.stringify({ file })
+  const res=await fetch("/create",{
+    method:"POST",
+    headers:{"Content-Type":"application/json"},
+    body: JSON.stringify({file})
   });
 
-  const data = await res.json();
+  const data=await res.json();
 
-  id = data.id;
-    token = data.token;
-  document.getElementById("qr").src = data.qr;
+  id=data.id;
+  token=data.token;
+
+  document.getElementById("qr").src=data.qr;
 
   check();
 }
 
 function check(){
-  const i = setInterval(async ()=>{
-    const res = await fetch("/check/"+id);
-    const data = await res.json();
+  const i=setInterval(async()=>{
+    const res=await fetch("/check/"+id);
+    const data=await res.json();
 
     if(data.paid){
       clearInterval(i);
-      document.getElementById("status").innerText = "จ่ายแล้ว ✅";
+      document.getElementById("status").innerText="จ่ายแล้ว ✅";
 
-      window.location.href = "/download/" + id + "/" + token;
+      window.location.href="/download/"+id+"/"+token;
     }
   },3000);
 }
 
-/* 🔥 ปิด popup */
 function hidePopup(){
-  document.getElementById("popup").style.display = "none";
+  document.getElementById("popup").style.display="none";
 }
 
-/* 🔥 กดพื้นหลังปิด */
 function closePopup(e){
-  if(e.target.id === "popup"){
+  if(e.target.id==="popup"){
     hidePopup();
   }
 }
+
+/* TIMER */
+let t=600;
+setInterval(()=>{
+  t--;
+  let m=Math.floor(t/60);
+  let s=t%60;
+  document.getElementById("time").innerText=
+    `${m}:${s<10?'0':''}${s}`;
+},1000);
 </script>
 
 </body>
