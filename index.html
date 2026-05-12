@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>สูตรลับ สร้างตัว</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Sarabun:wght@400;600;700;800&display=swap');
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Sarabun',sans-serif;background:#f7f7f7;color:#111;min-height:100vh}
+
+header{display:flex;align-items:center;justify-content:space-between;padding:24px 28px;background:#fff;border-bottom:1px solid #eee}
+header h1{font-size:clamp(28px,5vw,48px);font-weight:900;letter-spacing:-1px;background:linear-gradient(135deg,#f59e0b,#ef4444);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.btn-sell{background:#22c55e;color:#fff;border:none;padding:11px 22px;border-radius:10px;font-weight:700;font-size:15px;cursor:pointer;font-family:'Sarabun',sans-serif;transition:background .2s}
+.btn-sell:hover{background:#16a34a}
+
+.admin{background:#fff;border-bottom:1px solid #eee;padding:20px 24px;display:none}
+.admin-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px}
+.admin-top span{font-size:13px;color:#aaa}
+.btn-close{background:none;border:none;color:#aaa;font-size:20px;cursor:pointer;line-height:1}
+.upload-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px}
+.upload-box{border:1.5px dashed #ddd;border-radius:10px;padding:14px;text-align:center;cursor:pointer;background:#fafafa;transition:border-color .2s}
+.upload-box:hover{border-color:#111}
+.upload-box .ub-icon{font-size:24px;margin-bottom:4px}
+.upload-box .ub-label{font-size:12px;color:#aaa}
+.upload-box .ub-ok{font-size:12px;color:#22c55e;margin-top:4px;word-break:break-all}
+.cover-preview{width:100%;max-height:70px;object-fit:cover;border-radius:6px;margin-top:8px;display:none}
+.info-row{display:grid;grid-template-columns:1fr 90px auto;gap:8px;align-items:end}
+.info-row input{border:1.5px solid #e0e0e0;border-radius:8px;padding:9px 12px;font-family:'Sarabun',sans-serif;font-size:14px;width:100%}
+.info-row input:focus{outline:none;border-color:#111}
+.btn-add{background:#111;color:#fff;border:none;padding:10px 18px;border-radius:8px;font-weight:700;font-size:14px;cursor:pointer;font-family:'Sarabun',sans-serif;white-space:nowrap}
+.btn-add:hover{background:#333}
+
+.products{max-width:900px;margin:32px auto;padding:0 24px}
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:24px}
+.card{background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 2px 12px rgba(0,0,0,.07);transition:transform .2s,box-shadow .2s}
+.card:hover{transform:translateY(-3px);box-shadow:0 6px 24px rgba(0,0,0,.12)}
+.card-cover{width:100%;aspect-ratio:4/3;background:#f0f0f0;display:flex;align-items:center;justify-content:center;font-size:40px;color:#ccc;overflow:hidden}
+.card-cover img{width:100%;height:100%;object-fit:cover}
+.card-body{padding:16px}
+.card-name{font-size:17px;font-weight:700;margin-bottom:4px}
+.card-price{font-size:15px;color:#555;margin-bottom:12px}
+.btn-buy{width:100%;background:#111;color:#fff;border:none;padding:11px;border-radius:8px;font-weight:700;font-size:15px;cursor:pointer;font-family:'Sarabun',sans-serif}
+.btn-buy:hover{background:#333}
+.card-dl{font-size:12px;color:#f97316;margin-top:10px}
+.empty{text-align:center;padding:48px;color:#ccc;grid-column:1/-1}
+.empty-icon{font-size:40px;margin-bottom:8px}
+
+.modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:100;align-items:center;justify-content:center;padding:20px}
+.modal-bg.show{display:flex}
+.modal{background:#fff;border-radius:20px;padding:28px;max-width:340px;width:100%;text-align:center}
+.modal h2{font-size:19px;font-weight:800;margin-bottom:4px}
+.m-sub{color:#aaa;font-size:13px;margin-bottom:18px}
+.qr-wrap{background:#fff;border:1.5px solid #eee;border-radius:12px;padding:12px;display:inline-block;margin-bottom:14px}
+.amount-tag{background:#fff8e1;border:1.5px solid #ffb400;color:#d48000;padding:7px 22px;border-radius:8px;font-size:19px;font-weight:800;margin-bottom:18px;display:inline-block}
+.steps{text-align:left;background:#f7f7f7;border-radius:10px;padding:12px 16px;margin-bottom:18px}
+.steps li{color:#666;font-size:13px;margin-bottom:5px;list-style:none;padding-left:18px;position:relative}
+.steps li::before{content:'';position:absolute;left:0;top:7px;width:6px;height:6px;border-radius:50%;background:#111}
+.btn-confirm{width:100%;background:#111;color:#fff;border:none;padding:13px;border-radius:10px;font-weight:800;font-size:15px;cursor:pointer;font-family:'Sarabun',sans-serif;margin-bottom:8px}
+.btn-confirm:hover{background:#333}
+.btn-cancel{background:none;border:none;color:#bbb;font-size:13px;cursor:pointer;font-family:'Sarabun',sans-serif}
+.btn-dl{width:100%;background:#22c55e;color:#fff;border:none;padding:13px;border-radius:10px;font-weight:800;font-size:15px;cursor:pointer;font-family:'Sarabun',sans-serif;margin-bottom:8px}
+.success-icon{font-size:48px;margin-bottom:10px}
+
+.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#111;color:#fff;padding:11px 22px;border-radius:10px;font-size:13px;z-index:200;opacity:0;transition:opacity .3s;pointer-events:none;white-space:nowrap}
+.toast.show{opacity:1}
+footer{text-align:center;padding:28px;color:#ccc;font-size:12px}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>🔥 สูตรลับ ทำเงิน 🔥</h1>
+  <button class="btn-sell" id="sellBtn">+ ขายสูตร</button>
+</header>
+
+<div class="admin" id="adminPanel">
+  <div class="admin-top">
+    <span>➕ เพิ่มสูตรใหม่</span>
+    <button class="btn-close" id="closeBtn">✕</button>
+  </div>
+  <div class="upload-row">
+    <div class="upload-box" id="coverBox">
+      <div class="ub-icon">🖼️</div>
+      <div class="ub-label">อัปโหลดหน้าปก</div>
+      <div class="ub-ok" id="coverOk"></div>
+      <img class="cover-preview" id="coverPreview">
+      <input type="file" id="coverFile" accept="image/*" style="display:none">
+    </div>
+    <div class="upload-box" id="pdfBox">
+      <div class="ub-icon">📄</div>
+      <div class="ub-label">อัปโหลดไฟล์ PDF</div>
+      <div class="ub-ok" id="pdfOk"></div>
+      <input type="file" id="pdfFile" accept=".pdf" style="display:none">
+    </div>
+  </div>
+  <div class="info-row">
+    <input type="text" id="pName" placeholder="ชื่อสูตร">
+    <input type="number" id="pPrice" placeholder="ราคา ฿" min="1" max="20">
+    <button class="btn-add" id="addBtn">+ เพิ่ม</button>
+  </div>
+</div>
+
+<div class="products">
+  <div class="cards" id="cardGrid">
+    <div class="empty"><div class="empty-icon">📦</div><div>ยังไม่มีสูตร เพิ่มได้เลยครับ</div></div>
+  </div>
+</div>
+
+<div class="modal-bg" id="modal">
+  <div class="modal" id="modalContent"></div>
+</div>
+<div class="toast" id="toast"></div>
+<footer>© สูตรลับ สร้างตัว · ชำระผ่านพร้อมเพย์</footer>
+
+<script>
+var PROMPTPAY = '0814140953';
+var products = [];
+var pendingCover = null, pendingPDF = null;
+
+document.getElementById('sellBtn').addEventListener('click', function() {
+  document.getElementById('adminPanel').style.display = 'block';
+  document.getElementById('sellBtn').style.display = 'none';
+});
+
+document.getElementById('closeBtn').addEventListener('click', function() {
+  document.getElementById('adminPanel').style.display = 'none';
+  document.getElementById('sellBtn').style.display = 'block';
+});
+
+document.getElementById('coverBox').addEventListener('click', function() {
+  document.getElementById('coverFile').click();
+});
+
+document.getElementById('pdfBox').addEventListener('click', function() {
+  document.getElementById('pdfFile').click();
+});
+
+document.getElementById('coverFile').addEventListener('change', function() {
+  var f = this.files[0]; if (!f) return;
+  var r = new FileReader();
+  r.onload = function(e) {
+    pendingCover = e.target.result;
+    var img = document.getElementById('coverPreview');
+    img.src = e.target.result; img.style.display = 'block';
+    document.getElementById('coverOk').textContent = '✓ ' + f.name;
+  };
+  r.readAsDataURL(f);
+});
+
+document.getElementById('pdfFile').addEventListener('change', function() {
+  var f = this.files[0]; if (!f) return;
+  var r = new FileReader();
+  r.onload = function(e) { pendingPDF = {name: f.name, data: e.target.result}; };
+  r.readAsDataURL(f);
+  document.getElementById('pdfOk').textContent = '✓ ' + f.name;
+});
+
+document.getElementById('addBtn').addEventListener('click', function() {
+  var name = document.getElementById('pName').value.trim();
+  var price = parseInt(document.getElementById('pPrice').value);
+  if (!name) { showToast('⚠️ ใส่ชื่อสูตรด้วยครับ'); return; }
+  if (!price || price < 1 || price > 20) { showToast('⚠️ ราคา 1–20 บาทเท่านั้น'); return; }
+  if (!pendingPDF) { showToast('⚠️ เลือกไฟล์ PDF ด้วยครับ'); return; }
+  products.push({id: Date.now(), name: name, price: price, cover: pendingCover, pdf: pendingPDF, downloads: 0});
+  renderCards();
+  document.getElementById('pName').value = '';
+  document.getElementById('pPrice').value = '';
+  document.getElementById('coverFile').value = '';
+  document.getElementById('pdfFile').value = '';
+  document.getElementById('coverOk').textContent = '';
+  document.getElementById('pdfOk').textContent = '';
+  document.getElementById('coverPreview').style.display = 'none';
+  pendingCover = null; pendingPDF = null;
+  document.getElementById('adminPanel').style.display = 'none';
+  document.getElementById('sellBtn').style.display = 'block';
+  showToast('✅ เพิ่มสูตรแล้ว!');
+});
+
+function renderCards() {
+  var g = document.getElementById('cardGrid');
+  if (!products.length) {
+    g.innerHTML = '<div class="empty"><div class="empty-icon">📦</div><div>ยังไม่มีสูตร เพิ่มได้เลยครับ</div></div>';
+    return;
+  }
+  g.innerHTML = products.map(function(p, i) {
+    return '<div class="card">' +
+      '<div class="card-cover">' + (p.cover ? '<img src="' + p.cover + '">' : '📄') + '</div>' +
+      '<div class="card-body">' +
+        '<div class="card-name">' + p.name + '</div>' +
+        '<div class="card-price">' + p.price + ' บาท</div>' +
+        '<button class="btn-buy" data-idx="' + i + '">ซื้อ</button>' +
+        (p.downloads > 0 ? '<div class="card-dl">🔥 โหลดแล้ว ' + p.downloads + ' ครั้ง</div>' : '') +
+      '</div></div>';
+  }).join('');
+  document.querySelectorAll('.btn-buy').forEach(function(btn) {
+    btn.addEventListener('click', function() { openModal(parseInt(this.dataset.idx)); });
+  });
+}
+
+function crc16(s){var c=0xFFFF;for(var i=0;i<s.length;i++){c^=s.charCodeAt(i)<<8;for(var j=0;j<8;j++)c=(c&0x8000)?(c<<1)^0x1021:c<<1;}return(c&0xFFFF).toString(16).toUpperCase().padStart(4,'0');}
+function tlv(t,v){return t+String(v.length).padStart(2,'0')+v;}
+function buildQR(phone,amount){var n=phone.replace(/[^0-9]/g,'');if(n.startsWith('0'))n='66'+n.slice(1);var m=tlv('00','A000000677010111')+tlv('01',tlv('00','01')+tlv('01',n));var p=tlv('00','01')+tlv('01','12')+tlv('26',m)+tlv('53','764')+tlv('54',parseFloat(amount).toFixed(2))+tlv('58','TH')+'6304';return p+crc16(p);}
+
+function openModal(idx) {
+  var p = products[idx];
+  document.getElementById('modalContent').innerHTML =
+    '<h2>' + p.name + '</h2>' +
+    '<p class="m-sub">สแกน QR Code ชำระเงินผ่านพร้อมเพย์</p>' +
+    '<div class="qr-wrap"><div id="qrcode"></div></div><br>' +
+    '<div class="amount-tag">฿ ' + p.price + '.00</div>' +
+    '<ul class="steps"><li>เปิดแอปธนาคาร → สแกน QR</li><li>โอน ' + p.price + ' บาท</li><li>กด "ฉันโอนแล้ว" รับไฟล์ได้เลย</li></ul>' +
+    '<button class="btn-confirm" id="confirmBtn">✅ ฉันโอนแล้ว</button>' +
+    '<button class="btn-cancel" id="cancelBtn">ยกเลิก</button>';
+  document.getElementById('modal').classList.add('show');
+  document.getElementById('confirmBtn').addEventListener('click', function() { confirmPayment(idx); });
+  document.getElementById('cancelBtn').addEventListener('click', closeModal);
+  setTimeout(function() {
+    new QRCode(document.getElementById('qrcode'), {
+      text: buildQR(PROMPTPAY, p.price), width:180, height:180,
+      colorDark:'#000', colorLight:'#fff', correctLevel: QRCode.CorrectLevel.M
+    });
+  }, 100);
+}
+
+function confirmPayment(idx) {
+  products[idx].downloads++;
+  renderCards();
+  document.getElementById('modalContent').innerHTML =
+    '<div class="success-icon">🎉</div>' +
+    '<h2>ขอบคุณ!</h2>' +
+    '<p class="m-sub">ดาวน์โหลดไฟล์ได้เลยครับ</p>' +
+    '<button class="btn-dl" id="dlBtn">📥 ดาวน์โหลด</button>' +
+    '<button class="btn-cancel" id="cancelBtn2">ปิด</button>';
+  document.getElementById('dlBtn').addEventListener('click', function() { downloadFile(idx); });
+  document.getElementById('cancelBtn2').addEventListener('click', closeModal);
+}
+
+function downloadFile(idx) {
+  var f = products[idx].pdf;
+  var a = document.createElement('a'); a.href = f.data; a.download = f.name; a.click();
+}
+
+function closeModal() { document.getElementById('modal').classList.remove('show'); }
+document.getElementById('modal').addEventListener('click', function(e) { if (e.target === this) closeModal(); });
+
+function showToast(msg) {
+  var t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  setTimeout(function() { t.classList.remove('show'); }, 3000);
+}
+</script>
+</body>
+</html>
